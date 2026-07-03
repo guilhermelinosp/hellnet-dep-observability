@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Hellnet.Observability</AssemblyName>
+    <RootNamespace>Hellnet.Observability</RootNamespace>
+    <PackageId>Hellnet.Observability</PackageId>
+    <Authors>Hellnet</Authors>
+    <Copyright>Hellnet</Copyright>
+  </PropertyGroup>
+
+</Project>

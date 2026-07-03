@@ -1,0 +1,20 @@
+pre-commit:
+  commands:
+    dotnet-format:
+      tags: ["style"]
+      run: dotnet format
+      stage_fixed: true
+
+    dotnet-build:
+      tags: ["build"]
+      run: dotnet build --no-restore
+
+    dotnet-test:
+      tags: ["test"]
+      run: dotnet test --no-restore --no-build
+      skip: true  # skip until there are actual tests
+
+commit-msg:
+  commands:
+    commit-lint:
+      run: echo "ok"

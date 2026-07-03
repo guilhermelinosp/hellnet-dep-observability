@@ -12,5 +12,4 @@ jobs:
       - uses: googleapis/release-please-action@v4
         with:
           release-type: simple
-          manifest-file: .release-please-manifest.json
           skip-github-pull-request: false

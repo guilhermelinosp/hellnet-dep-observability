@@ -25,6 +25,4 @@ jobs:
       - name: Pack
         run: dotnet pack app/*.slnx --configuration Release --no-build --output ./artifacts
       - name: Publish
-        run: |
-          dotnet nuget push "./artifacts/*.nupkg" \
-            --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push "./artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json

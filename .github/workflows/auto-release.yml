@@ -4,6 +4,7 @@ on:
     branches: [main]
 permissions:
   contents: write
+  pull-requests: write
 jobs:
   auto-release:
     runs-on: ubuntu-latest
@@ -13,63 +14,106 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "10.0.x"
-      - name: Get current version from csproj
-        id: current_version
+      - name: Get current version from manifest
+        id: version
         run: |
-          VERSION=$(grep -oP '(?<=<Version>)[^<]+' app/src/Hellnet.Observability/Hellnet.Observability.csproj || echo "0.0.0")
-          echo "CURRENT_VERSION=$VERSION" >> $GITHUB_OUTPUT
-      - name: Determine next version
-        id: next_version
-        run: |
-          # Get commits since last tag
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$LAST_TAG" ]; then
-            COMMITS=$(git log --oneline --pretty=format:"%s")
+          CURRENT=$(jq -r '.["Hellnet.Observability"]' .release-please-manifest.json)
+          echo "CURRENT=$CURRENT"
+
+          # Parse version: 1.0.0-beta.15 -> major=1, minor=0, patch=0, beta=15
+          if [[ $CURRENT =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)-beta\.([0-9]+)$ ]]; then
+            MAJOR=${BASH_REMATCH[1]}
+            MINOR=${BASH_REMATCH[2]}
+            PATCH=${BASH_REMATCH[3]}
+            BETA=${BASH_REMATCH[4]}
           else
-            COMMITS=$(git log --oneline --pretty=format:"%s" $LAST_TAG..HEAD)
+            MAJOR=1; MINOR=0; PATCH=0; BETA=0
           fi
 
-          # Check for breaking changes
-          if echo "$COMMITS" | grep -qi "BREAKING CHANGE"; then
-            BUMP="major"
-          elif echo "$COMMITS" | grep -qi "^feat"; then
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            COMMITS=$(git log ${LAST_TAG}..HEAD --oneline --pretty=format:"%s")
+          else
+            COMMITS=$(git log --oneline --pretty=format:"%s")
+          fi
+
+          echo "COMMITS=$COMMITS"
+
+          # Determine bump type from conventional commits
+          BUMP="patch"
+          if echo "$COMMITS" | grep -qi "^feat"; then
             BUMP="minor"
           elif echo "$COMMITS" | grep -qi "^fix\|^perf\|^refactor"; then
             BUMP="patch"
-          else
-            BUMP="patch"
           fi
 
-          # Parse current version
-          CURRENT="${{ steps.current_version.outputs.CURRENT_VERSION }}"
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          echo "BUMP=$BUMP"
 
+          # Calculate next version (keep beta format)
           case $BUMP in
-            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
-            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
-            patch) PATCH=$((PATCH + 1)) ;;
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              BETA=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              BETA=0
+              ;;
+            patch)
+              BETA=$((BETA + 1))
+              ;;
           esac
 
-          NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
+          NEXT_VERSION="${MAJOR}.${MINOR}.${PATCH}-beta.${BETA}"
           echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_OUTPUT
           echo "BUMP_TYPE=$BUMP" >> $GITHUB_OUTPUT
-      - name: Update version in csproj
+      - name: Update manifest
         run: |
-          sed -i "s/<Version>[^<]*<\/Version>/<Version>${{ steps.next_version.outputs.NEXT_VERSION }}<\/Version>/" app/src/Hellnet.Observability/Hellnet.Observability.csproj
-      - name: Commit version bump
+          jq --arg v "${{ steps.version.outputs.NEXT_VERSION }}" '.["Hellnet.Observability"] = $v' .release-please-manifest.json > .release-please-manifest.json.tmp
+          mv .release-please-manifest.json.tmp .release-please-manifest.json
+      - name: Create changelog entry
+        id: changelog
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"- %s")
+          else
+            COMMITS=$(git log --pretty=format:"- %s")
+          fi
+
+          cat > CHANGELOG.md <<EOF
+          ## ${{ steps.version.outputs.NEXT_VERSION }}
+
+          $COMMITS
+
+          EOF
+      - name: Commit and tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app/src/Hellnet.Observability/Hellnet.Observability.csproj
-          git commit -m "chore: release ${{ steps.next_version.outputs.NEXT_VERSION }}"
-      - name: Create signed tag
-        run: |
-          git tag -s "v${{ steps.next_version.outputs.NEXT_VERSION }}" -m "Release v${{ steps.next_version.outputs.NEXT_VERSION }}"
-      - name: Push changes and tag
-        run: |
-          git push origin main
-          git push origin "v${{ steps.next_version.outputs.NEXT_VERSION }}"
+
+          git add .release-please-manifest.json CHANGELOG.md
+          git commit -m "chore: release ${{ steps.version.outputs.NEXT_VERSION }}"
+
+          # Create signed tag
+          git tag -s "v${{ steps.version.outputs.NEXT_VERSION }}" -m "Release ${{ steps.version.outputs.NEXT_VERSION }}"
+
+          git push origin main --tags
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.NEXT_VERSION }}
+          name: ${{ steps.version.outputs.NEXT_VERSION }}
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: true
+          make_latest: false
+          files: |
+            ./artifacts/*.nupkg
+            ./artifacts/*.snupkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

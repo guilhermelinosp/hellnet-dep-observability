@@ -9,6 +9,10 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    env:
+      HELLNET_SERVICE_NAME: test-service
+      HELLNET_OTLP_ENDPOINT: http://localhost:4317
+      HELLNET_OTLP_PROTOCOL: grpc
     steps:
       - name: Checkout
         uses: actions/checkout@v5

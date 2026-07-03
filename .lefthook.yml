@@ -1,20 +1,29 @@
+output: false
 pre-commit:
   commands:
     dotnet-format:
       tags: ["style"]
-      run: dotnet format
+      run: dotnet format app/*.slnx
       stage_fixed: true
-
     dotnet-build:
       tags: ["build"]
-      run: dotnet build --no-restore
-
+      run: dotnet build app/*.slnx --no-restore
     dotnet-test:
       tags: ["test"]
-      run: dotnet test --no-restore --no-build
-      skip: true  # skip until there are actual tests
-
+      run: dotnet test app/*.slnx --no-restore --no-build
+      skip: true
+    yamlfmt:
+      glob: "{*.yaml,*.yml,**/*.yaml,**/*.yml}"
+      exclude: ["**/bin/**", "**/obj/**"]
+      run: yamlfmt {staged_files}
+      stage_fixed: true
+    jsonfmt:
+      glob: "{*.json,**/*.json}"
+      exclude: ["**/bin/**", "**/obj/**"]
+      run: jsonfmt -w {staged_files}
+      stage_fixed: true
 commit-msg:
   commands:
-    commit-lint:
-      run: echo "ok"
+    conventional:
+      run: |
+        grep -Eq '^(feat|fix|docs|style|refactor|perf|test|ci|chore|revert)(\(.+\))?!?: .+' {1}

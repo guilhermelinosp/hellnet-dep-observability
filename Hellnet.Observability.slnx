@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="app/src/Hellnet.Observability/Hellnet.Observability.csproj" />
-  <Project Path="app/tests/Hellnet.Observability.Tests/Hellnet.Observability.Tests.csproj" />
-</Solution>

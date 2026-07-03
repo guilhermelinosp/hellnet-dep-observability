@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/Hellnet.Observability/Hellnet.Observability.csproj" />
+  <Project Path="tests/Hellnet.Observability.Tests/Hellnet.Observability.Tests.csproj" />
+</Solution>

@@ -18,5 +18,5 @@ jobs:
           target-branch: main
           include-v-in-tag: true
           draft: false
-          prerelease: false
+          prerelease: true
           manifest-file: .release-please-manifest.json

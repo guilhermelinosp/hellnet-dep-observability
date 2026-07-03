@@ -50,5 +50,6 @@ jobs:
           files: |
             ./artifacts/*.nupkg
             ./artifacts/*.snupkg
+            ./assets/icon.png
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

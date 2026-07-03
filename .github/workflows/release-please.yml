@@ -13,3 +13,4 @@ jobs:
         with:
           release-type: simple
           skip-github-pull-request: false
+          changelog-types: '[{"type":"feat","section":"Features"},{"type":"fix","section":"Bug Fixes"},{"type":"perf","section":"Performance"},{"type":"refactor","section":"Refactoring"},{"type":"docs","section":"Documentation"},{"type":"chore","section":"Chores"},{"type":"test","section":"Tests"}]'

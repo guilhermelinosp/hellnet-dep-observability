@@ -4,7 +4,7 @@ on:
     tags:
       - "v*"
 permissions:
-  contents: read
+  contents: write
   id-token: write
 jobs:
   publish:
@@ -35,3 +35,24 @@ jobs:
         run: dotnet pack app/*.slnx --configuration Release --no-build --output ./artifacts -p:Version=${{ steps.version.outputs.VERSION }}
       - name: Publish to NuGet
         run: dotnet nuget push "./artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body: |
+            ## Changes
+            See [CHANGELOG](https://github.com/guilhermelinosp/hellnet-dep-observability/commits/${{ github.ref_name }})
+
+            ## Installation
+            ```bash
+            dotnet add package Hellnet.Observability --version ${{ steps.version.outputs.VERSION }}
+            ```
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.VERSION, 'beta') || contains(steps.version.outputs.VERSION, 'alpha') || contains(steps.version.outputs.VERSION, 'rc') }}
+          make_latest: true
+          files: |
+            ./artifacts/*.nupkg
+            ./artifacts/*.snupkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

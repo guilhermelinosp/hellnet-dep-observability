@@ -12,11 +12,5 @@ jobs:
       - uses: googleapis/release-please-action@v4
         with:
           release-type: simple
-          package-name: Hellnet.Observability
-          changelog-types: '[{"type":"feat","section":"Features"},{"type":"fix","section":"Bug Fixes"},{"type":"perf","section":"Performance"},{"type":"refactor","section":"Refactoring"},{"type":"docs","section":"Documentation"},{"type":"chore","section":"Chores"},{"type":"test","section":"Tests"}]'
-          default-branch: main
-          target-branch: main
-          include-v-in-tag: true
-          draft: false
-          prerelease: true
           manifest-file: .release-please-manifest.json
+          skip-github-pull-request: false

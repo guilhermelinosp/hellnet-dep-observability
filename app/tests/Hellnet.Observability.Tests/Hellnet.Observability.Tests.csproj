@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Hellnet.Observability\Hellnet.Observability.csproj" />
+    <ProjectReference Include="..\..\src\Hellnet.Observability\Hellnet.Observability.csproj" />
   </ItemGroup>
 
 </Project>

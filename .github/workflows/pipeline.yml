@@ -13,9 +13,3 @@ jobs:
     needs: [release]
     uses: guilhermelinosp/ci-templates/.github/workflows/dotnet-build.yml@main
 
-  push:
-    needs: [build]
-    uses: guilhermelinosp/ci-templates/.github/workflows/dotnet-push.yml@main
-    secrets: inherit
-    with:
-      version: ${{ needs.release.outputs.version }}

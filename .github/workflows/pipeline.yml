@@ -9,7 +9,7 @@ on:
 jobs:
   release-please:
     if: github.ref_type == 'branch'
-    uses: guilhermelinosp/ci-templates/.github/workflows/release-please.yml@main
+    uses: guilhermelinosp/ci-templates/.github/workflows/release.yml@main
     secrets: inherit
 
   build:

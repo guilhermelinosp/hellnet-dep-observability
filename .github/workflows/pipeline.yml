@@ -11,7 +11,6 @@ jobs:
 
   build:
     needs: [release]
-    if: needs.release.outputs.version != ''
     uses: guilhermelinosp/ci-templates/.github/workflows/dotnet-build.yml@main
 
   push:

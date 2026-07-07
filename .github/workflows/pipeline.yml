@@ -3,8 +3,6 @@ name: pipeline
 on:
   push:
     branches: [main]
-    tags:
-      - "v*"
 
 jobs:
   release:
@@ -12,6 +10,8 @@ jobs:
     secrets: inherit
 
   build:
+    needs: [release]
+    if: needs.release.outputs.version != ''
     uses: guilhermelinosp/ci-templates/.github/workflows/dotnet-build.yml@main
 
   push:
@@ -19,4 +19,4 @@ jobs:
     uses: guilhermelinosp/ci-templates/.github/workflows/dotnet-push.yml@main
     secrets: inherit
     with:
-      version: ${{ needs.build.outputs.version }}
+      version: ${{ needs.release.outputs.version }}

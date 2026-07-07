@@ -3,8 +3,26 @@ name: pipeline
 on:
   push:
     branches: [main]
+    tags:
+      - "v*"
 
 jobs:
   release-please:
+    if: github.ref_type == 'branch'
     uses: guilhermelinosp/ci-templates/.github/workflows/release-please.yml@main
     secrets: inherit
+
+  build:
+    if: startsWith(github.ref, 'refs/tags/v')
+    uses: guilhermelinosp/ci-templates/.github/workflows/dotnet-build.yml@main
+    with:
+      solution: app/*.slnx
+
+  push:
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    uses: guilhermelinosp/ci-templates/.github/workflows/dotnet-push.yml@main
+    secrets: inherit
+    with:
+      solution: app/*.slnx
+      version: ${{ needs.build.outputs.version }}

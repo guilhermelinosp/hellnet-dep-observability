@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2-beta.0](https://github.com/guilhermelinosp/hellnet-dep-observability/compare/v1.3.1-beta.0...v1.3.2-beta.0) (2026-07-07)
+
+
+### Bug Fixes
+
+* resolve conflict ([ebe38af](https://github.com/guilhermelinosp/hellnet-dep-observability/commit/ebe38af0bc999482d33a729dd7b72ae6c768d631))
+
 ## [1.3.1-beta.0](https://github.com/guilhermelinosp/hellnet-dep-observability/compare/v1.3.0-beta.0...v1.3.1-beta.0) (2026-07-07)
 
 

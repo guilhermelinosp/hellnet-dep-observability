@@ -4,15 +4,7 @@ on:
   push:
     branches: [main]
 
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   release-please:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: googleapis/release-please-action@v4
-        with:
-          release-type: simple
-          skip-github-pull-request: false
+    uses: guilhermelinosp/ci-templates/.github/workflows/release-please.yml@main
+    secrets: inherit

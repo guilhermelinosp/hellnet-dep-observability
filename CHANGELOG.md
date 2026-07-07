@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0-beta.0](https://github.com/guilhermelinosp/hellnet-dep-observability/compare/v1.2.0-beta.0...v1.3.0-beta.0) (2026-07-07)
+
+
+### Features
+
+* migrate to ci-templates ([9f39b21](https://github.com/guilhermelinosp/hellnet-dep-observability/commit/9f39b21b124708dee776968c6f182427a85556de))
+
 ## [1.2.0-beta.0](https://github.com/guilhermelinosp/hellnet-dep-observability/compare/v1.1.0-beta.0...v1.2.0-beta.0) (2026-07-03)
 
 

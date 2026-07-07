@@ -8,3 +8,7 @@ jobs:
   release:
     uses: guilhermelinosp/ci-templates/.github/workflows/release.yml@main
     secrets: inherit
+
+  build:
+    needs: [release]
+    uses: guilhermelinosp/ci-templates/.github/workflows/dotnet-build.yml@main

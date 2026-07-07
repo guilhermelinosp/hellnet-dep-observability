@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1-beta.0](https://github.com/guilhermelinosp/hellnet-dep-observability/compare/v1.3.0-beta.0...v1.3.1-beta.0) (2026-07-07)
+
+
+### Bug Fixes
+
+* adicionar with: mode: pr no release job ([b16517e](https://github.com/guilhermelinosp/hellnet-dep-observability/commit/b16517e739317bb4bbdb08594c2e3f092a291d4b))
+
 ## [1.3.0-beta.0](https://github.com/guilhermelinosp/hellnet-dep-observability/compare/v1.2.0-beta.0...v1.3.0-beta.0) (2026-07-07)
 
 

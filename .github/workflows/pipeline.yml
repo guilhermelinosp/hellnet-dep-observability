@@ -14,10 +14,6 @@ jobs:
     uses: guilhermelinosp/ci-templates/.github/workflows/dotnet-build.yml@main
     with:
       version: ${{ needs.release.outputs.version }}
-    env:
-      HELLNET_SERVICE_NAME: test-service
-      HELLNET_OTLP_ENDPOINT: http://localhost:4317
-      HELLNET_OTLP_PROTOCOL: grpc
 
   push:
     needs: [build]

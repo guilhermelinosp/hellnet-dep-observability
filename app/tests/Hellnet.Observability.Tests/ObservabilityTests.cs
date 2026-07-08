@@ -420,7 +420,7 @@ public sealed class ObservabilityTests : IDisposable
         SetRequiredEnvVars();
         var services = new ServiceCollection();
         services.AddHellnetTracing(configureTracing: null);
-        using var sp = services.BuildServiceProvider();
+        using ServiceProvider sp = services.BuildServiceProvider();
     }
 
     [Fact]
@@ -429,7 +429,7 @@ public sealed class ObservabilityTests : IDisposable
         SetRequiredEnvVars();
         var services = new ServiceCollection();
         services.AddHellnetMetrics(configureMetrics: null);
-        using var sp = services.BuildServiceProvider();
+        using ServiceProvider sp = services.BuildServiceProvider();
     }
 
     // =====================================================================
@@ -442,7 +442,7 @@ public sealed class ObservabilityTests : IDisposable
         SetRequiredEnvVars();
         var services = new ServiceCollection();
         services.AddHellnetLogging();
-        using var sp = services.BuildServiceProvider();
+        using ServiceProvider sp = services.BuildServiceProvider();
         Assert.NotNull(sp.GetRequiredService<ILogger<ObservabilityTests>>());
     }
 
@@ -454,7 +454,7 @@ public sealed class ObservabilityTests : IDisposable
 
         var services = new ServiceCollection();
         services.AddHellnetLogging();
-        using var sp = services.BuildServiceProvider();
+        using ServiceProvider sp = services.BuildServiceProvider();
         Assert.NotNull(sp.GetRequiredService<ILogger<ObservabilityTests>>());
     }
 
@@ -475,11 +475,11 @@ public sealed class ObservabilityTests : IDisposable
     {
         Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
 
-        string tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
         Directory.CreateDirectory(tempDir);
         try
         {
-            string envFile = Path.Combine(tempDir, "test.env");
+            var envFile = Path.Combine(tempDir, "test.env");
             File.WriteAllText(envFile,
                 "# comment line\n" +
                 "HELLNET_SERVICE_NAME=from-env\n" +
@@ -511,11 +511,11 @@ public sealed class ObservabilityTests : IDisposable
         Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
         Environment.SetEnvironmentVariable("HELLNET_SERVICE_NAME", "pre-set");
 
-        string tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
         Directory.CreateDirectory(tempDir);
         try
         {
-            string envFile = Path.Combine(tempDir, "test.env");
+            var envFile = Path.Combine(tempDir, "test.env");
             File.WriteAllText(envFile, "HELLNET_SERVICE_NAME=from-file\n");
 
             Environment.SetEnvironmentVariable("HELLNET_ENV_FILE", envFile);
@@ -576,7 +576,7 @@ public sealed class ObservabilityTests : IDisposable
     {
         var services = new ServiceCollection();
         services.AddHellnetHealthChecks(configureHealthChecks: null);
-        using var sp = services.BuildServiceProvider();
+        using ServiceProvider sp = services.BuildServiceProvider();
     }
 
     [Fact]
@@ -586,7 +586,7 @@ public sealed class ObservabilityTests : IDisposable
         ClearEnvVars();
         var services = new ServiceCollection();
         services.AddHellnetHealthChecks();
-        using var sp = services.BuildServiceProvider();
+        using ServiceProvider sp = services.BuildServiceProvider();
     }
 
     [Fact]
@@ -595,7 +595,7 @@ public sealed class ObservabilityTests : IDisposable
         SetRequiredEnvVars();
         var services = new ServiceCollection();
         services.AddHellnetHealthChecks();
-        using var sp = services.BuildServiceProvider();
+        using ServiceProvider sp = services.BuildServiceProvider();
     }
 
     // =====================================================================
@@ -673,7 +673,7 @@ public sealed class ObservabilityTests : IDisposable
 
         context.Response.Body.Seek(0, SeekOrigin.Begin);
         using var reader = new StreamReader(context.Response.Body);
-        string json = await reader.ReadToEndAsync();
+        var json = await reader.ReadToEndAsync();
 
         Assert.Equal("application/json; charset=utf-8", context.Response.ContentType);
         using var doc = JsonDocument.Parse(json);
@@ -698,7 +698,7 @@ public sealed class ObservabilityTests : IDisposable
         services.AddLogging();
         services.AddHellnetHealthChecks();
         using ServiceProvider sp = services.BuildServiceProvider();
-        var healthCheckService = sp.GetRequiredService<HealthCheckService>();
+        HealthCheckService healthCheckService = sp.GetRequiredService<HealthCheckService>();
 
         HealthReport report = await healthCheckService.CheckHealthAsync(
             static check => check.Tags.Contains("ready"));

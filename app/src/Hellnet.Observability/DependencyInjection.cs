@@ -1,5 +1,4 @@
 using System.Net.Sockets;
-using System.Text.Json;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -168,13 +167,13 @@ public static class DependencyInjection
 
         _envFileLoaded = true;
 
-        string env = GetDotNetEnvironment();
+        var env = GetDotNetEnvironment();
         if (env != "Development")
         {
             return;
         }
 
-        string envFile = Environment.GetEnvironmentVariable("HELLNET_ENV_FILE")
+        var envFile = Environment.GetEnvironmentVariable("HELLNET_ENV_FILE")
             ?? Path.Combine(Directory.GetCurrentDirectory(), ".env");
 
         if (!File.Exists(envFile))
@@ -182,22 +181,22 @@ public static class DependencyInjection
             return;
         }
 
-        foreach (string line in File.ReadAllLines(envFile))
+        foreach (var line in File.ReadAllLines(envFile))
         {
-            string trimmed = line.Trim();
+            var trimmed = line.Trim();
             if (trimmed.Length == 0 || trimmed.StartsWith('#'))
             {
                 continue;
             }
 
-            int eq = trimmed.IndexOf('=');
+            var eq = trimmed.IndexOf('=');
             if (eq <= 0)
             {
                 continue;
             }
 
-            string key = trimmed[..eq].Trim();
-            string val = trimmed[(eq + 1)..].Trim();
+            var key = trimmed[..eq].Trim();
+            var val = trimmed[(eq + 1)..].Trim();
 
             // Strip surrounding quotes
             if (val.Length >= 2 && val[0] is '"' or '\'' && val[0] == val[^1])
@@ -328,7 +327,7 @@ public static class DependencyInjection
         builder.AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"]);
 
         // OTLP collector reachability check (for readiness probe)
-        string? otlpEndpoint = Environment.GetEnvironmentVariable("HELLNET_OTLP_ENDPOINT");
+        var otlpEndpoint = Environment.GetEnvironmentVariable("HELLNET_OTLP_ENDPOINT");
         if (!string.IsNullOrWhiteSpace(otlpEndpoint)
             && Uri.TryCreate(otlpEndpoint, UriKind.Absolute, out Uri? uri))
         {

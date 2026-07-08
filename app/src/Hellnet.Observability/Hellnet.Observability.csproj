@@ -1,106 +1,82 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
-        <LangVersion>preview</LangVersion>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Hellnet.Observability</AssemblyName>
+    <RootNamespace>Hellnet.Observability</RootNamespace>
+    <PackageId>Hellnet.Observability</PackageId>
+    <Title>Hellnet Observability</Title>
+    <Authors>Hellnet</Authors>
+    <Company>Hellnet</Company>
+    <Copyright>Hellnet</Copyright>
+    <Description>Opinionated OpenTelemetry observability library for .NET applications.</Description>
+    <PackageTags>observability;opentelemetry;otel;logging;metrics;tracing;serilog;dotnet</PackageTags>
+    <PackageProjectUrl>https://github.com/guilhermelinosp/hellnet-dep-observability</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/guilhermelinosp/hellnet-dep-observability</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
 
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+  <ItemGroup>
+    <None Include="..\..\..\docs\README.md" Pack="true" PackagePath="/" />
+    <None Include="..\..\..\assets\icon.png" Pack="true" PackagePath="/" />
+  </ItemGroup>
 
-        <AssemblyName>Hellnet.Observability</AssemblyName>
-        <RootNamespace>Hellnet.Observability</RootNamespace>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hellnet.Observability.Tests" />
+  </ItemGroup>
 
-        <PackageId>Hellnet.Observability</PackageId>
+  <ItemGroup Label="Microsoft">
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+  </ItemGroup>
 
-        <Authors>Hellnet</Authors>
-        <Company>Hellnet</Company>
-        <Copyright>Hellnet</Copyright>
+  <ItemGroup Label="OpenTelemetry">
+    <PackageReference Include="OpenTelemetry" Version="1.16.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.16.0" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.16.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.13.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.13.0-beta.2" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.13.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Process" Version="1.13.0-beta.1" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.13.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.13.0-beta.1" />
+  </ItemGroup>
 
-        <Description>Opinionated OpenTelemetry observability library for .NET applications.</Description>
+  <ItemGroup Label="Health Checks">
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.9" />
+  </ItemGroup>
 
-        <PackageTags>
-            observability;opentelemetry;otel;logging;metrics;tracing;alloy;serilog;dotnet
-        </PackageTags>
-
-        <PackageProjectUrl>https://github.com/guilhermelinosp/hellnet-dep-observability</PackageProjectUrl>
-
-        <RepositoryUrl>https://github.com/guilhermelinosp/hellnet-dep-observability</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-
-        <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
-        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
-
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <IsPackable>true</IsPackable>
-
-        <IncludeSymbols>true</IncludeSymbols>
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-
-        <Deterministic>true</Deterministic>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
-
-        <EnableNETAnalyzers>true</EnableNETAnalyzers>
-        <AnalysisLevel>latest</AnalysisLevel>
-        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-        <NoWarn>$(NoWarn);CS1591;IDE0051;IDE0052;NU5104</NoWarn>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <None Include="..\..\..\docs\README.md" Pack="true" PackagePath="\" />
-    </ItemGroup>
-
-    <PropertyGroup>
-        <PackageIcon>icon.png</PackageIcon>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <None Include="..\..\..\assets\icon.png" Pack="true" PackagePath="" />
-    </ItemGroup>
-
-    <ItemGroup Label="Microsoft">
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.9" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.9" />
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-    </ItemGroup>
-
-    <ItemGroup Label="OpenTelemetry">
-        <PackageReference Include="OpenTelemetry" Version="1.16.0" />
-        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.16.0" />
-        <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.16.0" />
-        <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.13.0" />
-        <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.13.0-beta.2" />
-        <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.13.0" />
-        <PackageReference Include="OpenTelemetry.Instrumentation.Process" Version="1.13.0-beta.1" />
-        <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.13.0" />
-        <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.13.0-beta.1" />
-    </ItemGroup>
-
-    <ItemGroup Label="Serilog">
-        <PackageReference Include="Serilog" Version="4.3.1" />
-        <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
-        <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
-        <PackageReference Include="Serilog.Enrichers.OpenTelemetry" Version="1.0.1" />
-        <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" />
-        <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
-        <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
-        <PackageReference Include="Serilog.Expressions" Version="5.0.0" />
-        <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
-        <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
-        <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
-        <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
-        <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-    </ItemGroup>
+  <ItemGroup Label="Serilog">
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+    <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" />
+    <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+    <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
+    <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+  </ItemGroup>
 
 </Project>

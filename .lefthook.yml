@@ -1,29 +1,21 @@
 output: false
 pre-commit:
   commands:
-    dotnet-format:
-      tags: ["style"]
-      run: dotnet format app/*.slnx
-      stage_fixed: true
-    dotnet-build:
-      tags: ["build"]
-      run: dotnet build app/*.slnx --no-restore
-    dotnet-test:
-      tags: ["test"]
-      run: dotnet test app/*.slnx --no-restore --no-build
-      skip: true
-    yamlfmt:
-      glob: "{*.yaml,*.yml,**/*.yaml,**/*.yml}"
-      exclude: ["**/bin/**", "**/obj/**"]
-      run: yamlfmt {staged_files}
-      stage_fixed: true
-    jsonfmt:
-      glob: "{*.json,**/*.json}"
-      exclude: ["**/bin/**", "**/obj/**"]
-      run: jsonfmt -w {staged_files}
-      stage_fixed: true
+    format:
+      glob: "{**/*.cs,**/*.yaml,**/*.yml,**/*.json}"
+      exclude:
+        - "**/bin/**"
+        - "**/obj/**"
+      run: |
+        dotnet format app/*.slnx --verbosity quiet --no-restore
+        git diff --cached --name-only --diff-filter=ACM -- '*.yaml' '*.yml' | xargs -r yq eval -i '.'
+        git diff --cached --name-only --diff-filter=ACM -- '*.json' | xargs -r yq eval -i -o=json '.'
+    build:
+      run: dotnet build app/*.slnx -c release --nologo
+    coverage:
+      run: dotnet test app/*.slnx -c release --nologo --verbosity quiet --no-build /p:CollectCoverage=true /p:Threshold=90 /p:ThresholdType=line /p:ThresholdStat=total
 commit-msg:
   commands:
     conventional:
       run: |
-        grep -Eq '^(feat|fix|docs|style|refactor|perf|test|ci|chore|revert)(\(.+\))?!?: .+' {1}
+        grep -Eq '^(feat|fix|docs|style|ref|perf|test|ci|chore|rev)(\(.+\))?!?: .+' {1}

@@ -42,6 +42,11 @@ bld/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
+# Code coverage
+*.coverage
+*.coveragexml
+coverage.json
+
 # dotnet tooling
 *.DotTools*
 

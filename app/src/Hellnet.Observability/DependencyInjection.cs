@@ -12,6 +12,8 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
+using Microsoft.Extensions.Logging;
+
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
@@ -33,7 +35,7 @@ public static class DependencyInjection
         HellnetObservabilityOptions options = LoadAndValidateOptions();
         ResourceBuilder resourceBuilder = CreateResourceBuilder(options);
         var otlpEndpoint = new Uri(options.OtlpEndpoint);
-        ILogger logger = BuildSerilogLogger(options);
+        Serilog.ILogger logger = BuildSerilogLogger(options);
         services.AddSerilog(logger, dispose: true);
         services.ConfigureHellnetOtlpLogs(options, resourceBuilder, otlpEndpoint);
         return services;
@@ -282,7 +284,7 @@ public static class DependencyInjection
     internal static LogEventLevel ParseLogLevel(string? value, LogEventLevel defaultLevel)
         => Enum.TryParse(value, ignoreCase: true, out LogEventLevel level) ? level : defaultLevel;
 
-    private static ILogger BuildSerilogLogger(HellnetObservabilityOptions options)
+    private static Serilog.ILogger BuildSerilogLogger(HellnetObservabilityOptions options)
     {
         LogEventLevel defaultLevel = ParseLogLevel(
             Environment.GetEnvironmentVariable("HELLNET_LOG_LEVEL"),
@@ -388,6 +390,56 @@ public static class DependencyInjection
         };
 
         return context.Response.WriteAsJsonAsync(payload, cancellationToken: context.RequestAborted);
+    }
+
+    /// <summary>
+    /// Registers all Hellnet telemetry in one call:
+    /// logging (Serilog + OTLP), tracing (OTLP), metrics (OTLP),
+    /// plus the high-level <see cref="ITelemetry"/> abstraction.
+    /// <para />
+    /// Calling this once is equivalent to calling all of:
+    /// <c>AddHellnetLogging()</c>, <c>AddHellnetTracing()</c>,
+    /// <c>AddHellnetMetrics()</c>, plus registering <c>ITelemetry</c>.
+    /// </summary>
+    public static IServiceCollection AddHellnetTelemetry(this IServiceCollection services)
+    {
+        HellnetObservabilityOptions options = LoadAndValidateOptions();
+        ResourceBuilder resourceBuilder = CreateResourceBuilder(options);
+        var otlpEndpoint = new Uri(options.OtlpEndpoint);
+
+        services.AddHellnetLogging();
+
+        services.AddOpenTelemetry()
+            .WithTracing(tracing =>
+            {
+                tracing
+                    .SetResourceBuilder(resourceBuilder)
+                    .AddSource(options.ServiceName)
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddEntityFrameworkCoreInstrumentation()
+                    .AddSqlClientInstrumentation()
+                    .AddOtlpExporter(otlp => ConfigureOtlpExporter(otlp, options, otlpEndpoint));
+            })
+            .WithMetrics(metrics =>
+            {
+                metrics
+                    .SetResourceBuilder(resourceBuilder)
+                    .AddMeter(options.ServiceName)
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddRuntimeInstrumentation()
+                    .AddProcessInstrumentation()
+                    .AddOtlpExporter(otlp => ConfigureOtlpExporter(otlp, options, otlpEndpoint));
+            });
+
+        services.AddSingleton<ITelemetry>(sp =>
+        {
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            return new HellnetTelemetry(options.ServiceName, loggerFactory);
+        });
+
+        return services;
     }
 
     private sealed class OtlpEndpointHealthCheck(Uri endpoint) : IHealthCheck

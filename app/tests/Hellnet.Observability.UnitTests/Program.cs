@@ -707,6 +707,90 @@ public sealed class ObservabilityTests : IDisposable
         Assert.Equal(HealthStatus.Unhealthy, report.Entries["otel-collector"].Status);
     }
 
+    // =====================================================================
+    // ITelemetry
+    // =====================================================================
+
+    [Fact]
+    public void HellnetTelemetry_Constructor_CreatesActivitySourceAndMeter()
+    {
+        var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var telemetry = new HellnetTelemetry("test-service", loggerFactory);
+
+        Assert.NotNull(telemetry);
+        Assert.Equal("test-service", telemetry.ActivitySource.Name);
+        Assert.Equal("test-service", telemetry.Meter.Name);
+    }
+
+    [Fact]
+    public void HellnetTelemetry_Logger_ReturnsTypedLogger()
+    {
+        var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var telemetry = new HellnetTelemetry("test-service", loggerFactory);
+
+        var logger = telemetry.Logger<ObservabilityTests>();
+        Assert.NotNull(logger);
+    }
+
+    [Fact]
+    public void HellnetTelemetry_ActivitySource_StartsActivity()
+    {
+        var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var telemetry = new HellnetTelemetry("test-service", loggerFactory);
+
+        using var activity = telemetry.ActivitySource.StartActivity("test-op");
+        // Activity may be null if no listener — that's OK, just verify no throw
+        activity?.SetTag("key", "val");
+    }
+
+    [Fact]
+    public void HellnetTelemetry_Meter_CreatesInstrument()
+    {
+        var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var telemetry = new HellnetTelemetry("test-service", loggerFactory);
+
+        var counter = telemetry.Meter.CreateCounter<long>("test.counter");
+        Assert.NotNull(counter);
+        counter.Add(1);
+
+        var histogram = telemetry.Meter.CreateHistogram<double>("test.histogram");
+        Assert.NotNull(histogram);
+        histogram.Record(1.0);
+    }
+
+    // =====================================================================
+    // AddHellnetTelemetry DI extension
+    // =====================================================================
+
+    [Fact]
+    public void AddHellnetTelemetry_RegistersITelemetry()
+    {
+        Environment.SetEnvironmentVariable("HELLNET_SERVICE_NAME", "test");
+        Environment.SetEnvironmentVariable("HELLNET_OTLP_ENDPOINT", "http://localhost:4317");
+        Environment.SetEnvironmentVariable("HELLNET_OTLP_PROTOCOL", "grpc");
+        DependencyInjection.ResetCachedOptions();
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddHellnetTelemetry();
+        using var sp = services.BuildServiceProvider();
+
+        var telemetry = sp.GetService<ITelemetry>();
+        Assert.NotNull(telemetry);
+        Assert.Equal("test", telemetry!.ActivitySource.Name);
+        Assert.Equal("test", telemetry.Meter.Name);
+    }
+
+    [Fact]
+    public void AddHellnetTelemetry_Throws_WhenEnvMissing()
+    {
+        ClearEnvVars();
+        DependencyInjection.ResetCachedOptions();
+
+        var services = new ServiceCollection();
+        Assert.Throws<InvalidOperationException>(() => services.AddHellnetTelemetry());
+    }
+
     private static readonly PassthroughHealthCheck s_passthroughCheck = new();
 
     private sealed class PassthroughHealthCheck : IHealthCheck

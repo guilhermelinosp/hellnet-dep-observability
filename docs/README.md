@@ -227,7 +227,7 @@ metadata:
   name: observability-secrets
 type: Opaque
 stringData:
-  HELLNET_OTLP_ENDPOINT: "http://otel-collector.observability:4317"
+  HELLNET_OTLP_ENDPOINT: "http://alloy.monitoring:4317"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -763,7 +763,7 @@ env:
 - name: HELLNET_SERVICE_NAME
   value: "order-api"
 - name: HELLNET_OTLP_ENDPOINT
-  value: "http://otel-collector.observability:4317"
+  value: "http://alloy.monitoring:4317"
 - name: HELLNET_OTLP_PROTOCOL
   value: "grpc"
 ```

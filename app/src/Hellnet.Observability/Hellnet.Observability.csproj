@@ -41,7 +41,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Hellnet.Observability.Tests" />
+    <InternalsVisibleTo Include="Hellnet.Observability.UnitTests" />
+    <InternalsVisibleTo Include="Hellnet.Observability.IntegrationTests" />
   </ItemGroup>
 
   <ItemGroup Label="Microsoft">

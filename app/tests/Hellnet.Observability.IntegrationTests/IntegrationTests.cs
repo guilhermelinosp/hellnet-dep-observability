@@ -3,6 +3,9 @@ using System.Diagnostics.Metrics;
 using Hellnet.Observability;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Polly;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
@@ -239,5 +242,97 @@ public sealed class IntegrationTests : IDisposable
         ClearEnvVars();
         var svc2 = new ServiceCollection();
         svc2.AddHellnetLogging();
+    }
+
+    // =====================================================================
+    // Resilience — Polly pipelines
+    // =====================================================================
+
+    [Fact]
+    public async Task HellnetResilience_DefaultPipeline_SuccessfulOperation()
+    {
+        // Verifies the default pipeline passes through a successful operation
+        var result = await HellnetResilience.DefaultPipeline.ExecuteAsync(
+            ct => new ValueTask<int>(42));
+        Assert.Equal(42, result);
+    }
+
+    [Fact]
+    public async Task HellnetResilience_HealthCheckPipeline_SuccessfulOperation()
+    {
+        // Verifies the health check pipeline passes through a successful operation
+        var result = await HellnetResilience.HealthCheckPipeline.ExecuteAsync(
+            ct => new ValueTask<string>("ok"));
+        Assert.Equal("ok", result);
+    }
+
+    [Fact]
+    public async Task HellnetResilience_Retry_TransientFailure_RetriesThenThrows()
+    {
+        // Verifies that retry exhausts attempts and re-throws the original exception
+        var attempts = 0;
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            HellnetResilience.HealthCheckPipeline.ExecuteAsync(
+                async ct =>
+                {
+                    attempts++;
+                    await Task.Delay(1, ct);
+                    throw new InvalidOperationException($"attempt-{attempts}");
+                }).AsTask());
+
+        Assert.Contains("attempt", ex.Message);
+        Assert.True(attempts >= 2, $"Expected at least 2 attempts, got {attempts}");
+    }
+
+    [Fact]
+    public async Task HellnetResilience_Timeout_HealthCheckPipeline_ThrowsOnTimeout()
+    {
+        // HealthCheckPipeline has a 3s timeout — verify it fires for slow operations
+        var ex = await Assert.ThrowsAsync<TimeoutRejectedException>(() =>
+            HellnetResilience.HealthCheckPipeline.ExecuteAsync(
+                async ct =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(10), ct);
+                }).AsTask());
+        Assert.NotNull(ex);
+    }
+
+    [Fact]
+    public async Task HellnetResilience_CircuitBreaker_OpensAfterFailures()
+    {
+        // Custom pipeline with very low thresholds
+        var pipeline = new ResiliencePipelineBuilder()
+            .AddCircuitBreaker(new CircuitBreakerStrategyOptions
+            {
+                ShouldHandle = _ => ValueTask.FromResult(true),
+                FailureRatio = 1.0,
+                MinimumThroughput = 2,
+                BreakDuration = TimeSpan.FromSeconds(1),
+            })
+            .Build();
+
+        var attempts = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            try
+            {
+                await pipeline.ExecuteAsync(ct =>
+                {
+                    attempts++;
+                    throw new InvalidOperationException($"fail-{attempts}");
+                });
+            }
+            catch (BrokenCircuitException)
+            {
+                Assert.True(attempts >= 2, $"Circuit broke after {attempts} attempts");
+                return;
+            }
+            catch (InvalidOperationException)
+            {
+                // Expected first failure
+            }
+        }
+
+        Assert.Fail("Circuit breaker should have opened before 3 attempts");
     }
 }

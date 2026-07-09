@@ -398,9 +398,21 @@ public static class DependencyInjection
         {
             try
             {
-                using var client = new TcpClient();
-                await client.ConnectAsync(endpoint.Host, endpoint.Port, cancellationToken);
+                await HellnetResilience.HealthCheckPipeline.ExecuteAsync(
+                    async ct =>
+                    {
+                        using var client = new TcpClient();
+                        await client.ConnectAsync(endpoint.Host, endpoint.Port, ct);
+                    },
+                    cancellationToken);
+
                 return HealthCheckResult.Healthy();
+            }
+            catch (OperationCanceledException)
+            {
+                return HealthCheckResult.Unhealthy(
+                    description: $"OTLP collector at {endpoint.Host}:{endpoint.Port} timed out",
+                    exception: null);
             }
             catch (Exception ex)
             {

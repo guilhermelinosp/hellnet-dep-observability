@@ -138,7 +138,6 @@ Inclusas por padrão no `AddHellnetTelemetry()` e `AddHellnetTracing/Metrics()`.
 | **Logging** | Serilog 4.3.1 (compact JSON, async console) |
 | **Resilience** | Polly.Core 8.7.0 |
 | **.NET** | 10.0, C# 14 |
-| **Tests** | xUnit, FluentAssertions, Moq, AutoFixture, coverlet (94.8%) |
 
 ## ADR — Architecture Decision Records
 

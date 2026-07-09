@@ -34,10 +34,16 @@ public class OrderService(ITelemetry tel)
 {
     public async Task Process(Order order)
     {
-        using var span = tel.StartActivity("process-order");
+        // Tracing
+        using var span = tel.ActivitySource.StartActivity("process-order");
+        span?.SetTag("order.id", order.Id);
+
+        // Logging
         tel.Logger<OrderService>().LogInformation("Processing {Id}", order.Id);
-        tel.Count("orders.processed");
-        tel.Record("order.value", (double)order.Total);
+
+        // Metrics
+        tel.Meter.CreateCounter<long>("orders.processed").Add(1);
+        tel.Meter.CreateHistogram<double>("order.value").Record((double)order.Total);
     }
 }
 ```

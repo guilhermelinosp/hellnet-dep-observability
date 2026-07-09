@@ -352,25 +352,23 @@ public sealed class IntegrationTests : IDisposable
         var telemetry = sp.GetRequiredService<ITelemetry>();
         Assert.NotNull(telemetry);
 
-        // Logger
+        // Logger — native ILogger<T>
         var logger = telemetry.Logger<IntegrationTests>();
         Assert.NotNull(logger);
         logger.LogInformation("ITelemetry logger works: {Prefix}", _prefix);
 
-        // Counter
-        telemetry.Count("test.counter");
-        telemetry.Count("test.counter", 5);
-
-        // Histogram
-        telemetry.Record("test.histogram", 10.5);
-        telemetry.Record("test.histogram", 20.3);
-
-        // Tracing
-        using var activity = telemetry.StartActivity("test-activity");
+        // Tracing — native ActivitySource
+        using var activity = telemetry.ActivitySource.StartActivity("test-activity");
         if (activity is not null)
         {
             activity.SetTag("test.id", _prefix);
         }
+
+        // Metrics — native Meter
+        var counter = telemetry.Meter.CreateCounter<long>("test.counter");
+        counter.Add(1);
+        var histogram = telemetry.Meter.CreateHistogram<double>("test.histogram");
+        histogram.Record(10.5);
     }
 
     [Fact]

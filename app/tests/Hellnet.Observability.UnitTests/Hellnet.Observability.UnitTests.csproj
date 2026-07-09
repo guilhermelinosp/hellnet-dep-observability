@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <AssemblyName>Hellnet.Observability.UnitTests</AssemblyName>
+    <RootNamespace>Hellnet.Observability.UnitTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="src/Hellnet.Observability/Hellnet.Observability.csproj" />
-  <Project Path="tests/Hellnet.Observability.Tests/Hellnet.Observability.Tests.csproj" />
+  <Project Path="tests/Hellnet.Observability.UnitTests/Hellnet.Observability.UnitTests.csproj" />
+  <Project Path="tests/Hellnet.Observability.IntegrationTests/Hellnet.Observability.IntegrationTests.csproj" />
 </Solution>

@@ -12,7 +12,7 @@ using Serilog.Events;
 
 using Xunit;
 
-namespace Hellnet.Observability.Tests;
+namespace Hellnet.Observability.UnitTests;
 
 [CollectionDefinition("Sequential", DisableParallelization = true)]
 public sealed class SequentialCollection;

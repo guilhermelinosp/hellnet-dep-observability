@@ -19,7 +19,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageIcon>icon.png</PackageIcon>
+
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <IsPackable>true</IsPackable>
     <IncludeSymbols>true</IncludeSymbols>
@@ -37,7 +37,6 @@
 
   <ItemGroup>
     <None Include="..\..\..\README.md" Pack="true" PackagePath="/" />
-    <None Include="..\..\..\assets\icon.png" Pack="true" PackagePath="/" />
   </ItemGroup>
 
   <ItemGroup>

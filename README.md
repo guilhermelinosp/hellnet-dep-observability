@@ -139,14 +139,6 @@ Inclusas por padrão no `AddHellnetTelemetry()` e `AddHellnetTracing/Metrics()`.
 | **Resilience** | Polly.Core 8.7.0 |
 | **.NET** | 10.0, C# 14 |
 
-## ADR — Architecture Decision Records
-
-Decisões técnicas documentadas em:
-
-[https://gist.github.com/guilhermelinosp/27c941772c6c4184d41875d8de15ab84](https://gist.github.com/guilhermelinosp/27c941772c6c4184d41875d8de15ab84)
-
-Topics covered: OTel as single framework, 12-factor config, three pipelines, health checks, Polly resilience, ITelemetry abstraction, auto-instrumentation.
-
 ## License
 
 Apache 2.0 — © 2026 Hellnet

@@ -91,7 +91,6 @@ public static class DependencyInjection
                     .SetResourceBuilder(resourceBuilder)
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddEntityFrameworkCoreInstrumentation()
                     .AddSqlClientInstrumentation()
                     .AddOtlpExporter(otlp => ConfigureOtlpExporter(otlp, options, otlpEndpoint));
 
@@ -116,7 +115,6 @@ public static class DependencyInjection
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
-                    .AddProcessInstrumentation()
                     .AddOtlpExporter(otlp => ConfigureOtlpExporter(otlp, options, otlpEndpoint));
 
                 configureMetrics?.Invoke(metrics);
@@ -417,7 +415,6 @@ public static class DependencyInjection
                     .AddSource(options.ServiceName)
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddEntityFrameworkCoreInstrumentation()
                     .AddSqlClientInstrumentation()
                     .AddOtlpExporter(otlp => ConfigureOtlpExporter(otlp, options, otlpEndpoint));
             })
@@ -429,7 +426,6 @@ public static class DependencyInjection
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
-                    .AddProcessInstrumentation()
                     .AddOtlpExporter(otlp => ConfigureOtlpExporter(otlp, options, otlpEndpoint));
             });
 

@@ -7,6 +7,8 @@ using Polly;
 using Polly.CircuitBreaker;
 using Polly.Timeout;
 using Microsoft.Extensions.Logging;
+using FluentAssertions;
+using Moq;
 using Xunit;
 
 namespace Hellnet.Observability.IntegrationTests;
@@ -58,7 +60,7 @@ public sealed class IntegrationTests : IDisposable
         svc.AddHellnetLogging();
         using var sp = svc.BuildServiceProvider();
         var logger = sp.GetRequiredService<ILogger<IntegrationTests>>();
-        Assert.NotNull(logger);
+        logger.Should().NotBeNull();
     }
 
     [Fact]
@@ -228,7 +230,7 @@ public sealed class IntegrationTests : IDisposable
         DependencyInjection.ResetCachedOptions();
 
         var svc2 = new ServiceCollection();
-        Assert.Throws<InvalidOperationException>(() => svc2.AddHellnetLogging());
+        FluentActions.Invoking(() => svc2.AddHellnetLogging()).Should().Throw<InvalidOperationException>();
     }
 
     [Fact]
@@ -254,7 +256,7 @@ public sealed class IntegrationTests : IDisposable
         // Verifies the default pipeline passes through a successful operation
         var result = await HellnetResilience.DefaultPipeline.ExecuteAsync(
             ct => new ValueTask<int>(42));
-        Assert.Equal(42, result);
+        result.Should().Be(42);
     }
 
     [Fact]
@@ -263,7 +265,7 @@ public sealed class IntegrationTests : IDisposable
         // Verifies the health check pipeline passes through a successful operation
         var result = await HellnetResilience.HealthCheckPipeline.ExecuteAsync(
             ct => new ValueTask<string>("ok"));
-        Assert.Equal("ok", result);
+        result.Should().Be("ok");
     }
 
     [Fact]
@@ -280,8 +282,8 @@ public sealed class IntegrationTests : IDisposable
                     throw new InvalidOperationException($"attempt-{attempts}");
                 }).AsTask());
 
-        Assert.Contains("attempt", ex.Message);
-        Assert.True(attempts >= 2, $"Expected at least 2 attempts, got {attempts}");
+        ex.Message.Should().Contain("attempt");
+        attempts.Should().BeGreaterThan(1);
     }
 
     [Fact]
@@ -294,7 +296,7 @@ public sealed class IntegrationTests : IDisposable
                 {
                     await Task.Delay(TimeSpan.FromSeconds(10), ct);
                 }).AsTask());
-        Assert.NotNull(ex);
+        ex.Should().NotBeNull();
     }
 
     [Fact]
@@ -324,7 +326,7 @@ public sealed class IntegrationTests : IDisposable
             }
             catch (BrokenCircuitException)
             {
-                Assert.True(attempts >= 2, $"Circuit broke after {attempts} attempts");
+                attempts.Should().BeGreaterThan(1);
                 return;
             }
             catch (InvalidOperationException)
@@ -350,11 +352,11 @@ public sealed class IntegrationTests : IDisposable
 
         await using var sp = svc.BuildServiceProvider();
         var telemetry = sp.GetRequiredService<ITelemetry>();
-        Assert.NotNull(telemetry);
+        telemetry.Should().NotBeNull();
 
         // Logger — native ILogger<T>
         var logger = telemetry.Logger<IntegrationTests>();
-        Assert.NotNull(logger);
+        logger.Should().NotBeNull();
         logger.LogInformation("ITelemetry logger works: {Prefix}", _prefix);
 
         // Tracing — native ActivitySource
@@ -376,6 +378,6 @@ public sealed class IntegrationTests : IDisposable
     {
         ClearEnvVars();
         var svc = new ServiceCollection();
-        Assert.Throws<InvalidOperationException>(() => svc.AddHellnetTelemetry());
+        FluentActions.Invoking(() => svc.AddHellnetTelemetry()).Should().Throw<InvalidOperationException>();
     }
 }

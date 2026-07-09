@@ -10,6 +10,8 @@ using OpenTelemetry.Exporter;
 
 using Serilog.Events;
 
+using FluentAssertions;
+using Moq;
 using Xunit;
 
 namespace Hellnet.Observability.UnitTests;
@@ -59,9 +61,9 @@ public sealed class ObservabilityTests : IDisposable
         InvalidOperationException ex = Assert.Throws<InvalidOperationException>(
             () => DependencyInjection.ValidateOptions(options));
 
-        Assert.Contains("HELLNET_SERVICE_NAME", ex.Message);
-        Assert.Contains("HELLNET_OTLP_ENDPOINT", ex.Message);
-        Assert.Contains("HELLNET_OTLP_PROTOCOL", ex.Message);
+        ex.Message.Should().Contain("HELLNET_SERVICE_NAME");
+        ex.Message.Should().Contain("HELLNET_OTLP_ENDPOINT");
+        ex.Message.Should().Contain("HELLNET_OTLP_PROTOCOL");
     }
 
     [Fact]
@@ -76,7 +78,7 @@ public sealed class ObservabilityTests : IDisposable
         InvalidOperationException ex = Assert.Throws<InvalidOperationException>(
             () => DependencyInjection.ValidateOptions(options));
 
-        Assert.Contains("HELLNET_SERVICE_NAME", ex.Message);
+        ex.Message.Should().Contain("HELLNET_SERVICE_NAME");
     }
 
     [Fact]
@@ -91,7 +93,7 @@ public sealed class ObservabilityTests : IDisposable
         InvalidOperationException ex = Assert.Throws<InvalidOperationException>(
             () => DependencyInjection.ValidateOptions(options));
 
-        Assert.Contains("HELLNET_OTLP_ENDPOINT", ex.Message);
+        ex.Message.Should().Contain("HELLNET_OTLP_ENDPOINT");
     }
 
     [Fact]
@@ -106,7 +108,7 @@ public sealed class ObservabilityTests : IDisposable
         InvalidOperationException ex = Assert.Throws<InvalidOperationException>(
             () => DependencyInjection.ValidateOptions(options));
 
-        Assert.Contains("HELLNET_OTLP_PROTOCOL", ex.Message);
+        ex.Message.Should().Contain("HELLNET_OTLP_PROTOCOL");
     }
 
     [Fact]
@@ -122,8 +124,8 @@ public sealed class ObservabilityTests : IDisposable
         InvalidOperationException ex = Assert.Throws<InvalidOperationException>(
             () => DependencyInjection.ValidateOptions(options));
 
-        Assert.Contains("Invalid HELLNET_OTLP_ENDPOINT", ex.Message);
-        Assert.Contains("not-a-valid-uri", ex.Message);
+        ex.Message.Should().Contain("Invalid HELLNET_OTLP_ENDPOINT");
+        ex.Message.Should().Contain("not-a-valid-uri");
     }
 
     [Fact]
@@ -139,7 +141,7 @@ public sealed class ObservabilityTests : IDisposable
         InvalidOperationException ex = Assert.Throws<InvalidOperationException>(
             () => DependencyInjection.ValidateOptions(options));
 
-        Assert.Contains("Expected 'grpc' or 'http'", ex.Message);
+        ex.Message.Should().Contain("Expected 'grpc' or 'http'");
     }
 
     [Fact]
@@ -174,7 +176,7 @@ public sealed class ObservabilityTests : IDisposable
     public void ParseProtocol_ValidValues(string input, OtlpExportProtocol expected)
     {
         OtlpExportProtocol result = DependencyInjection.ParseProtocol(input);
-        Assert.Equal(expected, result);
+        result.Should().Be(expected);
     }
 
     [Fact]
@@ -183,8 +185,8 @@ public sealed class ObservabilityTests : IDisposable
         InvalidOperationException ex = Assert.Throws<InvalidOperationException>(
             () => DependencyInjection.ParseProtocol("invalid"));
 
-        Assert.Contains("Expected 'grpc' or 'http'", ex.Message);
-        Assert.Contains("invalid", ex.Message);
+        ex.Message.Should().Contain("Expected 'grpc' or 'http'");
+        ex.Message.Should().Contain("invalid");
     }
 
     // =====================================================================
@@ -195,7 +197,7 @@ public sealed class ObservabilityTests : IDisposable
     public void GetDotNetEnvironment_ReturnsProduction_WhenNoEnvSet()
     {
         var result = DependencyInjection.GetDotNetEnvironment();
-        Assert.Equal("Production", result);
+        result.Should().Be("Production");
     }
 
     [Fact]
@@ -203,7 +205,7 @@ public sealed class ObservabilityTests : IDisposable
     {
         Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Staging");
         var result = DependencyInjection.GetDotNetEnvironment();
-        Assert.Equal("Staging", result);
+        result.Should().Be("Staging");
     }
 
     [Fact]
@@ -211,7 +213,7 @@ public sealed class ObservabilityTests : IDisposable
     {
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         var result = DependencyInjection.GetDotNetEnvironment();
-        Assert.Equal("Development", result);
+        result.Should().Be("Development");
     }
 
     [Fact]
@@ -220,7 +222,7 @@ public sealed class ObservabilityTests : IDisposable
         Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Production");
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         var result = DependencyInjection.GetDotNetEnvironment();
-        Assert.Equal("Production", result);
+        result.Should().Be("Production");
     }
 
     // =====================================================================
@@ -239,14 +241,14 @@ public sealed class ObservabilityTests : IDisposable
     public void ParseLogLevel_ReturnsExpected(string? input, LogEventLevel expected)
     {
         LogEventLevel result = DependencyInjection.ParseLogLevel(input, LogEventLevel.Information);
-        Assert.Equal(expected, result);
+        result.Should().Be(expected);
     }
 
     [Fact]
     public void ParseLogLevel_UsesDefault_WhenValueIsNull()
     {
         LogEventLevel result = DependencyInjection.ParseLogLevel(null, LogEventLevel.Error);
-        Assert.Equal(LogEventLevel.Error, result);
+        result.Should().Be(LogEventLevel.Error);
     }
 
     // =====================================================================
@@ -257,7 +259,7 @@ public sealed class ObservabilityTests : IDisposable
     public void AddHellnetLogging_Throws_WhenAllEnvMissing()
     {
         var services = new ServiceCollection();
-        Assert.Throws<InvalidOperationException>(() => services.AddHellnetLogging());
+        FluentActions.Invoking(() => services.AddHellnetLogging()).Should().Throw<InvalidOperationException>();
     }
 
     [Fact]
@@ -268,8 +270,8 @@ public sealed class ObservabilityTests : IDisposable
         Environment.SetEnvironmentVariable("HELLNET_OTLP_PROTOCOL", "grpc");
 
         var services = new ServiceCollection();
-        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() => services.AddHellnetLogging());
-        Assert.Contains("Invalid HELLNET_OTLP_ENDPOINT", ex.Message);
+        FluentActions.Invoking(() => services.AddHellnetLogging()).Should().Throw<InvalidOperationException>()
+            .WithMessage("*Invalid HELLNET_OTLP_ENDPOINT*");
     }
 
     // =====================================================================
@@ -280,7 +282,7 @@ public sealed class ObservabilityTests : IDisposable
     public void AddHellnetTracing_Throws_WhenAllEnvMissing()
     {
         var services = new ServiceCollection();
-        Assert.Throws<InvalidOperationException>(() => services.AddHellnetTracing());
+        FluentActions.Invoking(() => services.AddHellnetTracing()).Should().Throw<InvalidOperationException>();
     }
 
     // =====================================================================
@@ -291,7 +293,7 @@ public sealed class ObservabilityTests : IDisposable
     public void AddHellnetMetrics_Throws_WhenAllEnvMissing()
     {
         var services = new ServiceCollection();
-        Assert.Throws<InvalidOperationException>(() => services.AddHellnetMetrics());
+        FluentActions.Invoking(() => services.AddHellnetMetrics()).Should().Throw<InvalidOperationException>();
     }
 
     // =====================================================================
@@ -304,7 +306,7 @@ public sealed class ObservabilityTests : IDisposable
         SetRequiredEnvVars();
         var services = new ServiceCollection();
         IServiceCollection result = services.AddHellnetLogging();
-        Assert.Same(services, result);
+        result.Should().BeSameAs(services);
     }
 
     [Fact]
@@ -315,7 +317,7 @@ public sealed class ObservabilityTests : IDisposable
         services.AddHellnetLogging();
         using ServiceProvider sp = services.BuildServiceProvider();
         ILogger<ObservabilityTests> logger = sp.GetRequiredService<ILogger<ObservabilityTests>>();
-        Assert.NotNull(logger);
+        logger.Should().NotBeNull();
     }
 
     // =====================================================================
@@ -328,7 +330,7 @@ public sealed class ObservabilityTests : IDisposable
         SetRequiredEnvVars();
         var services = new ServiceCollection();
         IServiceCollection result = services.AddHellnetTracing();
-        Assert.Same(services, result);
+        result.Should().BeSameAs(services);
     }
 
     // =====================================================================
@@ -341,7 +343,7 @@ public sealed class ObservabilityTests : IDisposable
         SetRequiredEnvVars();
         var services = new ServiceCollection();
         IServiceCollection result = services.AddHellnetMetrics();
-        Assert.Same(services, result);
+        result.Should().BeSameAs(services);
     }
 
     // =====================================================================
@@ -358,7 +360,7 @@ public sealed class ObservabilityTests : IDisposable
         services.AddHellnetMetrics();
         using ServiceProvider sp = services.BuildServiceProvider();
         ILogger<ObservabilityTests> logger = sp.GetRequiredService<ILogger<ObservabilityTests>>();
-        Assert.NotNull(logger);
+        logger.Should().NotBeNull();
     }
 
     // =====================================================================
@@ -391,7 +393,7 @@ public sealed class ObservabilityTests : IDisposable
 
         // Must re-validate and throw
         var services2 = new ServiceCollection();
-        Assert.Throws<InvalidOperationException>(() => services2.AddHellnetLogging());
+        FluentActions.Invoking(() => services2.AddHellnetLogging()).Should().Throw<InvalidOperationException>();
     }
 
     // =====================================================================
@@ -443,7 +445,7 @@ public sealed class ObservabilityTests : IDisposable
         var services = new ServiceCollection();
         services.AddHellnetLogging();
         using ServiceProvider sp = services.BuildServiceProvider();
-        Assert.NotNull(sp.GetRequiredService<ILogger<ObservabilityTests>>());
+        sp.GetRequiredService<ILogger<ObservabilityTests>>().Should().NotBeNull();
     }
 
     [Fact]
@@ -455,7 +457,7 @@ public sealed class ObservabilityTests : IDisposable
         var services = new ServiceCollection();
         services.AddHellnetLogging();
         using ServiceProvider sp = services.BuildServiceProvider();
-        Assert.NotNull(sp.GetRequiredService<ILogger<ObservabilityTests>>());
+        sp.GetRequiredService<ILogger<ObservabilityTests>>().Should().NotBeNull();
     }
 
     // =====================================================================
@@ -493,11 +495,11 @@ public sealed class ObservabilityTests : IDisposable
             DependencyInjection.ResetCachedOptions();
             DependencyInjection.LoadEnvFileIfDevelopment();
 
-            Assert.Equal("from-env", Environment.GetEnvironmentVariable("HELLNET_SERVICE_NAME"));
-            Assert.Equal("http://from-env:4317", Environment.GetEnvironmentVariable("HELLNET_OTLP_ENDPOINT"));
-            Assert.Equal("grpc", Environment.GetEnvironmentVariable("HELLNET_OTLP_PROTOCOL"));
-            Assert.Equal("value", Environment.GetEnvironmentVariable("QUOTED"));
-            Assert.Equal("value2", Environment.GetEnvironmentVariable("SINGLE_QUOTED"));
+            Environment.GetEnvironmentVariable("HELLNET_SERVICE_NAME").Should().Be("from-env");
+            Environment.GetEnvironmentVariable("HELLNET_OTLP_ENDPOINT").Should().Be("http://from-env:4317");
+            Environment.GetEnvironmentVariable("HELLNET_OTLP_PROTOCOL").Should().Be("grpc");
+            Environment.GetEnvironmentVariable("QUOTED").Should().Be("value");
+            Environment.GetEnvironmentVariable("SINGLE_QUOTED").Should().Be("value2");
         }
         finally
         {
@@ -523,7 +525,7 @@ public sealed class ObservabilityTests : IDisposable
             DependencyInjection.LoadEnvFileIfDevelopment();
 
             // Should keep the pre-set value, not override
-            Assert.Equal("pre-set", Environment.GetEnvironmentVariable("HELLNET_SERVICE_NAME"));
+            Environment.GetEnvironmentVariable("HELLNET_SERVICE_NAME").Should().Be("pre-set");
         }
         finally
         {
@@ -540,7 +542,7 @@ public sealed class ObservabilityTests : IDisposable
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder();
         WebApplication app = builder.Build();
-        Assert.Throws<InvalidOperationException>(() => app.UseHellnetObservability());
+        FluentActions.Invoking(() => app.UseHellnetObservability()).Should().Throw<InvalidOperationException>();
     }
 
     [Fact]
@@ -561,7 +563,7 @@ public sealed class ObservabilityTests : IDisposable
     {
         var services = new ServiceCollection();
         IServiceCollection result = services.AddHellnetHealthChecks();
-        Assert.Same(services, result);
+        result.Should().BeSameAs(services);
     }
 
     [Fact]
@@ -675,14 +677,14 @@ public sealed class ObservabilityTests : IDisposable
         using var reader = new StreamReader(context.Response.Body);
         var json = await reader.ReadToEndAsync();
 
-        Assert.Equal("application/json; charset=utf-8", context.Response.ContentType);
+        context.Response.ContentType.Should().Be("application/json; charset=utf-8");
         using var doc = JsonDocument.Parse(json);
-        Assert.Equal("Unhealthy", doc.RootElement.GetProperty("status").GetString());
+        doc.RootElement.GetProperty("status").GetString().Should().Be("Unhealthy");
         JsonElement checks = doc.RootElement.GetProperty("checks");
-        Assert.Equal(2, checks.GetArrayLength());
-        Assert.Equal("self", checks[0].GetProperty("name").GetString());
-        Assert.Equal("custom", checks[1].GetProperty("name").GetString());
-        Assert.NotNull(checks[1].GetProperty("error").GetString());
+        checks.GetArrayLength().Should().Be(2);
+        checks[0].GetProperty("name").GetString().Should().Be("self");
+        checks[1].GetProperty("name").GetString().Should().Be("custom");
+        checks[1].GetProperty("error").GetString().Should().NotBeNull();
     }
 
     // =====================================================================
@@ -703,8 +705,8 @@ public sealed class ObservabilityTests : IDisposable
         HealthReport report = await healthCheckService.CheckHealthAsync(
             static check => check.Tags.Contains("ready"));
 
-        Assert.Contains("otel-collector", report.Entries.Keys);
-        Assert.Equal(HealthStatus.Unhealthy, report.Entries["otel-collector"].Status);
+        report.Entries.Keys.Should().Contain("otel-collector");
+        report.Entries["otel-collector"].Status.Should().Be(HealthStatus.Unhealthy);
     }
 
     // =====================================================================
@@ -717,9 +719,9 @@ public sealed class ObservabilityTests : IDisposable
         var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
         var telemetry = new HellnetTelemetry("test-service", loggerFactory);
 
-        Assert.NotNull(telemetry);
-        Assert.Equal("test-service", telemetry.ActivitySource.Name);
-        Assert.Equal("test-service", telemetry.Meter.Name);
+        telemetry.Should().NotBeNull();
+        telemetry.ActivitySource.Name.Should().Be("test-service");
+        telemetry.Meter.Name.Should().Be("test-service");
     }
 
     [Fact]
@@ -729,7 +731,7 @@ public sealed class ObservabilityTests : IDisposable
         var telemetry = new HellnetTelemetry("test-service", loggerFactory);
 
         var logger = telemetry.Logger<ObservabilityTests>();
-        Assert.NotNull(logger);
+        logger.Should().NotBeNull();
     }
 
     [Fact]
@@ -750,11 +752,11 @@ public sealed class ObservabilityTests : IDisposable
         var telemetry = new HellnetTelemetry("test-service", loggerFactory);
 
         var counter = telemetry.Meter.CreateCounter<long>("test.counter");
-        Assert.NotNull(counter);
+        counter.Should().NotBeNull();
         counter.Add(1);
 
         var histogram = telemetry.Meter.CreateHistogram<double>("test.histogram");
-        Assert.NotNull(histogram);
+        histogram.Should().NotBeNull();
         histogram.Record(1.0);
     }
 
@@ -776,9 +778,9 @@ public sealed class ObservabilityTests : IDisposable
         using var sp = services.BuildServiceProvider();
 
         var telemetry = sp.GetService<ITelemetry>();
-        Assert.NotNull(telemetry);
-        Assert.Equal("test", telemetry!.ActivitySource.Name);
-        Assert.Equal("test", telemetry.Meter.Name);
+        telemetry.Should().NotBeNull();
+        telemetry!.ActivitySource.Name.Should().Be("test");
+        telemetry.Meter.Name.Should().Be("test");
     }
 
     [Fact]
@@ -788,7 +790,7 @@ public sealed class ObservabilityTests : IDisposable
         DependencyInjection.ResetCachedOptions();
 
         var services = new ServiceCollection();
-        Assert.Throws<InvalidOperationException>(() => services.AddHellnetTelemetry());
+        FluentActions.Invoking(() => services.AddHellnetTelemetry()).Should().Throw<InvalidOperationException>();
     }
 
     private static readonly PassthroughHealthCheck s_passthroughCheck = new();

@@ -139,6 +139,6 @@ Inclusas por padrão no `AddHellnetTelemetry()`.
 | **Resilience** | Polly.Core 8.7.0 |
 | **.NET** | 10.0, C# 14 |
 
-## License
+## Licença
 
-Apache 2.0 — © 2026 Hellnet
+Apache 2.0 © 2026 Hellnet

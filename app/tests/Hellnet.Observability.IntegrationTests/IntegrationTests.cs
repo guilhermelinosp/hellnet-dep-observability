@@ -335,4 +335,49 @@ public sealed class IntegrationTests : IDisposable
 
         Assert.Fail("Circuit breaker should have opened before 3 attempts");
     }
+
+    // =====================================================================
+    // ITelemetry high-level abstraction
+    // =====================================================================
+
+    [Fact]
+    public async Task AddHellnetTelemetry_RegistersAndWorks()
+    {
+        SetRequiredEnvVars();
+        var svc = new ServiceCollection();
+        svc.AddLogging();
+        svc.AddHellnetTelemetry();
+
+        await using var sp = svc.BuildServiceProvider();
+        var telemetry = sp.GetRequiredService<ITelemetry>();
+        Assert.NotNull(telemetry);
+
+        // Logger
+        var logger = telemetry.Logger<IntegrationTests>();
+        Assert.NotNull(logger);
+        logger.LogInformation("ITelemetry logger works: {Prefix}", _prefix);
+
+        // Counter
+        telemetry.Count("test.counter");
+        telemetry.Count("test.counter", 5);
+
+        // Histogram
+        telemetry.Record("test.histogram", 10.5);
+        telemetry.Record("test.histogram", 20.3);
+
+        // Tracing
+        using var activity = telemetry.StartActivity("test-activity");
+        if (activity is not null)
+        {
+            activity.SetTag("test.id", _prefix);
+        }
+    }
+
+    [Fact]
+    public void AddHellnetTelemetry_Throws_WhenEnvMissing()
+    {
+        ClearEnvVars();
+        var svc = new ServiceCollection();
+        Assert.Throws<InvalidOperationException>(() => svc.AddHellnetTelemetry());
+    }
 }

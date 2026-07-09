@@ -12,7 +12,7 @@ dotnet add package Hellnet.Observability
 ### 2. Set Environment Variables
 ```bash
 export HELLNET_SERVICE_NAME=my-service
-export HELLNET_OTLP_ENDPOINT=http://localhost:4317
+export HELLNET_OTLP_ENDPOINT=http://alloy.monitoring:4317
 export HELLNET_OTLP_PROTOCOL=grpc
 ```
 
@@ -21,18 +21,25 @@ export HELLNET_OTLP_PROTOCOL=grpc
 using Hellnet.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddHellnetLogging();
-builder.Services.AddHellnetTracing();
-builder.Services.AddHellnetMetrics();
+builder.Services.AddHellnetTelemetry();
 
 var app = builder.Build();
 app.UseHellnetObservability();
 app.Run();
 ```
 
-### 4. Use Logging
+### 4. Use Logging, Metrics, Tracing
 ```csharp
-_logger.LogInformation("Order created: {OrderId}", orderId);
+public class OrderService(ITelemetry tel)
+{
+    public async Task Process(Order order)
+    {
+        using var span = tel.StartActivity("process-order");
+        tel.Logger<OrderService>().LogInformation("Processing {Id}", order.Id);
+        tel.Count("orders.processed");
+        tel.Record("order.value", (double)order.Total);
+    }
+}
 ```
 
 ✅ **Done!** Your service now has full observability.

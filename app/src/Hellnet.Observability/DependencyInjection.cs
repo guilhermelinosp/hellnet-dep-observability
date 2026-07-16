@@ -34,10 +34,10 @@ public static class DependencyInjection
     {
         HellnetObservabilityOptions options = LoadAndValidateOptions();
         ResourceBuilder resourceBuilder = CreateResourceBuilder(options);
-        var otlpEndpoint = new Uri(options.OtlpEndpoint);
         Serilog.ILogger logger = BuildSerilogLogger(options);
         services.AddSerilog(logger, dispose: true);
-        services.ConfigureHellnetOtlpLogs(options, resourceBuilder, otlpEndpoint);
+        SetOtlpEnvironmentVars(options);
+        services.ConfigureHellnetOtlpLogs(options, resourceBuilder);
         return services;
     }
 
@@ -47,8 +47,8 @@ public static class DependencyInjection
     {
         HellnetObservabilityOptions options = LoadAndValidateOptions();
         ResourceBuilder resourceBuilder = CreateResourceBuilder(options);
-        var otlpEndpoint = new Uri(options.OtlpEndpoint);
-        return services.AddHellnetTracing(options, resourceBuilder, otlpEndpoint, configureTracing);
+        SetOtlpEnvironmentVars(options);
+        return services.AddHellnetTracing(options, resourceBuilder, configureTracing);
     }
 
     public static IServiceCollection AddHellnetMetrics(
@@ -57,8 +57,8 @@ public static class DependencyInjection
     {
         HellnetObservabilityOptions options = LoadAndValidateOptions();
         ResourceBuilder resourceBuilder = CreateResourceBuilder(options);
-        var otlpEndpoint = new Uri(options.OtlpEndpoint);
-        return services.AddHellnetMetrics(options, resourceBuilder, otlpEndpoint, configureMetrics);
+        SetOtlpEnvironmentVars(options);
+        return services.AddHellnetMetrics(options, resourceBuilder, configureMetrics);
     }
 
     public static IApplicationBuilder UseHellnetObservability(this IApplicationBuilder app)
@@ -77,11 +77,35 @@ public static class DependencyInjection
         return app;
     }
 
+    /// <summary>
+    /// Sets standard OTEL_* environment variables from HELLNET_* values.
+    /// The OTel SDK reads these env vars automatically, avoiding a known bug
+    /// in OTel SDK 1.16.0 where code-based exporter configuration causes
+    /// ForceFlush() to return False.
+    /// </summary>
+    private static void SetOtlpEnvironmentVars(HellnetObservabilityOptions options)
+    {
+        // Only set if not already set by the user (user-configured env vars take precedence)
+        if (Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT") is null)
+        {
+            Environment.SetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT", options.OtlpEndpoint);
+        }
+
+        if (Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_PROTOCOL") is null)
+        {
+            string protocol = options.OtlpProtocol.Trim().ToLowerInvariant() switch
+            {
+                "grpc" or "grpc/protobuf" => "grpc",
+                _ => "http/protobuf"
+            };
+            Environment.SetEnvironmentVariable("OTEL_EXPORTER_OTLP_PROTOCOL", protocol);
+        }
+    }
+
     private static IServiceCollection AddHellnetTracing(
         this IServiceCollection services,
         HellnetObservabilityOptions options,
         ResourceBuilder resourceBuilder,
-        Uri otlpEndpoint,
         Action<TracerProviderBuilder>? configureTracing = null)
     {
         services.AddOpenTelemetry()
@@ -92,7 +116,7 @@ public static class DependencyInjection
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddSqlClientInstrumentation()
-                    .AddOtlpExporter(otlp => ConfigureOtlpExporter(otlp, options, otlpEndpoint));
+                    .AddOtlpExporter();
 
                 configureTracing?.Invoke(tracing);
             });
@@ -104,7 +128,6 @@ public static class DependencyInjection
         this IServiceCollection services,
         HellnetObservabilityOptions options,
         ResourceBuilder resourceBuilder,
-        Uri otlpEndpoint,
         Action<MeterProviderBuilder>? configureMetrics = null)
     {
         services.AddOpenTelemetry()
@@ -115,7 +138,7 @@ public static class DependencyInjection
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
-                    .AddOtlpExporter(otlp => ConfigureOtlpExporter(otlp, options, otlpEndpoint));
+                    .AddOtlpExporter();
 
                 configureMetrics?.Invoke(metrics);
             });
@@ -123,12 +146,12 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection ConfigureHellnetOtlpLogs(this IServiceCollection services, HellnetObservabilityOptions options, ResourceBuilder resourceBuilder, Uri otlpEndpoint)
+    private static IServiceCollection ConfigureHellnetOtlpLogs(this IServiceCollection services, HellnetObservabilityOptions options, ResourceBuilder resourceBuilder)
     {
         services.AddOpenTelemetry()
             .WithLogging(logging => logging
                 .SetResourceBuilder(resourceBuilder)
-                .AddOtlpExporter(otlp => ConfigureOtlpExporter(otlp, options, otlpEndpoint)));
+                .AddOtlpExporter());
 
         return services;
     }
@@ -255,7 +278,7 @@ public static class DependencyInjection
             throw new InvalidOperationException($"Invalid HELLNET_OTLP_ENDPOINT. Must be a valid absolute URI. Got: {options.OtlpEndpoint}");
         }
 
-        // Fail-fast: validate protocol value at startup, not lazily in OTel exporter
+        // Validate protocol value at startup
         ParseProtocol(options.OtlpProtocol);
     }
 
@@ -266,12 +289,6 @@ public static class DependencyInjection
             "grpc" or "grpc/protobuf" => OtlpExportProtocol.Grpc,
             _ => throw new InvalidOperationException($"Invalid HELLNET_OTLP_PROTOCOL. Expected 'grpc' or 'http'. Got: {protocolString}")
         };
-
-    private static void ConfigureOtlpExporter(OtlpExporterOptions exporterOptions, HellnetObservabilityOptions options, Uri otlpEndpoint)
-    {
-        exporterOptions.Endpoint = otlpEndpoint;
-        exporterOptions.Protocol = ParseProtocol(options.OtlpProtocol);
-    }
 
     internal static string GetDotNetEnvironment()
         => Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
@@ -403,7 +420,7 @@ public static class DependencyInjection
     {
         HellnetObservabilityOptions options = LoadAndValidateOptions();
         ResourceBuilder resourceBuilder = CreateResourceBuilder(options);
-        var otlpEndpoint = new Uri(options.OtlpEndpoint);
+        SetOtlpEnvironmentVars(options);
 
         services.AddHellnetLogging();
 
@@ -416,7 +433,7 @@ public static class DependencyInjection
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddSqlClientInstrumentation()
-                    .AddOtlpExporter(otlp => ConfigureOtlpExporter(otlp, options, otlpEndpoint));
+                    .AddOtlpExporter();
             })
             .WithMetrics(metrics =>
             {
@@ -426,7 +443,7 @@ public static class DependencyInjection
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
-                    .AddOtlpExporter(otlp => ConfigureOtlpExporter(otlp, options, otlpEndpoint));
+                    .AddOtlpExporter();
             });
 
         services.AddSingleton<ITelemetry>(sp =>

@@ -142,3 +142,4 @@ Inclusas por padrão no `AddHellnetTelemetry()`.
 ## Licença
 
 Apache 2.0 © 2026 Hellnet
+# ci test 1784199366

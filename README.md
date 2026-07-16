@@ -143,3 +143,4 @@ Inclusas por padrão no `AddHellnetTelemetry()`.
 
 Apache 2.0 © 2026 Hellnet
 # ci test 1784199366
+# ci verify 1784200158

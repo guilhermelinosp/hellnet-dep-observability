@@ -1,6 +1,6 @@
 # Hellnet Observability
 
-Library de observabilidade para microsserviços .NET 10, baseada em OpenTelemetry com structured logging (Serilog), distributed tracing e metrics — setup em 1 linha, native OTel API.
+Library de observabilidade para microsservicos .NET 10, baseada em OpenTelemetry com structured logging (Serilog), distributed tracing e metrics — setup em 1 linha, native OTel API.
 
 ```
 dotnet add package Hellnet.Observability
@@ -12,8 +12,8 @@ dotnet add package Hellnet.Observability
 
 ```bash
 export HELLNET_SERVICE_NAME=my-service
-export HELLNET_OTLP_ENDPOINT=http://alloy.monitoring:4317
-export HELLNET_OTLP_PROTOCOL=grpc
+export HELLNET_OTLP_ENDPOINT=http://alloy.monitoring:4318
+export HELLNET_OTLP_PROTOCOL=http
 ```
 
 ```csharp
@@ -92,10 +92,10 @@ builder.Services.AddHellnetMetrics(m =>
     m.AddMeter("MyApp.CustomMetrics"));
 ```
 
-### Resiliência (Polly)
+### Resiliencia (Polly)
 
-Health check do OTLP collector usa retry (2x) + timeout (3s).  
-Configurável via `HellnetResilience`:
+Health check do OTLP collector usa retry (2x) + timeout (3s).
+Configuravel via `HellnetResilience`:
 
 ```csharp
 HellnetResilience.RetryCount = 5;
@@ -104,20 +104,20 @@ HellnetResilience.TimeoutDuration = TimeSpan.FromSeconds(10);
 
 ## Required env vars
 
-| Variable | Exemplo | Descrição |
+| Variable | Exemplo | Descricao |
 |----------|---------|-----------|
 | `HELLNET_SERVICE_NAME` | `order-api` | Service identifier |
-| `HELLNET_OTLP_ENDPOINT` | `http://alloy.monitoring:4317` | OTLP collector endpoint |
-| `HELLNET_OTLP_PROTOCOL` | `grpc` / `http` | Transport protocol |
+| `HELLNET_OTLP_ENDPOINT` | `http://alloy.monitoring:4318` | OTLP collector endpoint (HTTP) |
+| `HELLNET_OTLP_PROTOCOL` | `http` | Transport protocol (`http` or `grpc`) |
 
-Fail-fast: a aplicação não inicia sem essas três.
+Fail-fast: a aplicacao nao inicia sem essas tres.
 
-| Variable | Default | Descrição |
+| Variable | Default | Descricao |
 |----------|---------|-----------|
-| `HELLNET_LOG_LEVEL` | `Information` | Mínimo level de log |
+| `HELLNET_LOG_LEVEL` | `Information` | Minimo level de log |
 | `HELLNET_ENV_FILE` | — | Caminho do `.env` em development |
 
-## Instrumentação automática
+## Instrumentacao automatica
 
 | Camada | Package |
 |--------|---------|
@@ -128,7 +128,7 @@ Fail-fast: a aplicação não inicia sem essas três.
 | Runtime | `OpenTelemetry.Instrumentation.Runtime` |
 | Process | `OpenTelemetry.Instrumentation.Process` |
 
-Inclusas por padrão no `AddHellnetTelemetry()`.
+Inclusas por padrao no `AddHellnetTelemetry()`.
 
 ## Tech stack
 
@@ -139,8 +139,6 @@ Inclusas por padrão no `AddHellnetTelemetry()`.
 | **Resilience** | Polly.Core 8.7.0 |
 | **.NET** | 10.0, C# 14 |
 
-## Licença
+## Licenca
 
-Apache 2.0 © 2026 Hellnet
-# ci test 1784199366
-# ci verify 1784200158
+Apache 2.0 (c) 2026 Hellnet
